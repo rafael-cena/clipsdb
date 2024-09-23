@@ -1,5 +1,9 @@
 import siseventos.db.util.Conexao;
 
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.List;
+
 public class ClipDAL {
 
     public boolean inserir(Clip clip) {
@@ -13,14 +17,57 @@ public class ClipDAL {
         insert = insert.replace("#4", clip.getPubdata().toString());
         insert = insert.replace("#5", clip.getUrl());
 
-        Conexao conexao = new Conexao();
-        conexao.conectar("jdbc:postgresql://localhost:5432/", "db_musics", "postgres", "postgres123");
-        if (conexao.getEstadoConexao()) {
-            if (conexao.manipular(insert))
-                return true;
-            else
-                return false;
+        return SingletonDB.getConexao().manipular(insert);
+    }
+
+    public boolean alterar(Clip clip) {
+        String update = """
+                UPDATE clip
+                	SET clp_artista='#1', clp_titulo='#2', clp_duracao=#3, clp_pubdata='#4', clp_url='#5'
+                	WHERE clp_id=#6;
+                """;
+        update = update.replace("#1", clip.getArtista());
+        update = update.replace("#2", clip.getTitulo());
+        update = update.replace("#3", ""+clip.getDuracao());
+        update = update.replace("#4", clip.getPubdata().toString());
+        update = update.replace("#5", clip.getUrl());
+        update = update.replace("#6", ""+clip.getId());
+
+        return SingletonDB.getConexao().manipular(update);
+    }
+
+    public boolean apagar (Clip clip) {
+        return SingletonDB.getConexao().manipular("DELETE FROM clip WHERE clp_id="+clip.getId());
+    }
+
+    public Clip get (int id) {
+        Clip clip = null;
+        ResultSet resultSet = SingletonDB.getConexao().consultar("SELECT * FROM clip WHERE clp_id="+id);
+        try {
+            if (resultSet.next())
+                clip = new Clip(id, resultSet.getString("clp_artista"), resultSet.getString("clp_titulo"),
+                        resultSet.getInt("clp_duracao"), resultSet.getDate("clp_pubdata").toLocalDate(), resultSet.getString("clp_url"));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
-        return false;
+
+        return clip;
+    }
+
+    public List<Clip> get (String filtro) {
+        List<Clip> clips = new ArrayList<>();
+        String select = "SELECT * FROM clip";
+        if (!filtro.isEmpty())
+            select+=" WHERE "+filtro;
+        ResultSet resultSet = SingletonDB.getConexao().consultar(select);
+        try {
+            while (resultSet.next())
+                clips.add(new Clip(resultSet.getInt("clp_id"), resultSet.getString("clp_artista"), resultSet.getString("clp_titulo"),
+                        resultSet.getInt("clp_duracao"), resultSet.getDate("clp_pubdata").toLocalDate(), resultSet.getString("clp_url")));
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+
+        return clips;
     }
 }

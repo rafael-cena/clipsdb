@@ -6,14 +6,26 @@ import java.sql.DriverManager;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.time.LocalDate;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        Clip clip = new Clip("Taylor Swift", "Taylor Perdigão", 220, LocalDate.of(2024,01,15), "https://youtube.com/");
+        SingletonDB.conectar();
+        Clip clip; // = new Clip("Taylor Swift", "Taylor Perdigão", 220, LocalDate.of(2024,01,15), "https://youtube.com/");
         ClipDAL dal = new ClipDAL(); //Data Access Layer -> Camada de Acesso de Dados
-        if (dal.inserir(clip)) {
-            System.out.println("deu certo!");
+//        dal.inserir(clip);
+        List<Clip> clips;
+        clips=dal.get("clp_artista LIKE 'MATO GROSSO%'");
+
+        for (Clip c:clips) {
+            System.out.println(c.getArtista());
         }
+
+//        System.out.println(clip.getArtista());
+//        dal.apagar(clip);
+//        clip.setArtista(clip.getArtista().toUpperCase());
+//        dal.alterar(clip);
+//        System.out.println(clip.getArtista());
 
 
 //                  U S A N D O   C L A S S E   C O N E X A O
